@@ -3658,9 +3658,9 @@ def generate_floor():
                 secondary_gen = 1
             elif prop.layout == 7:
                 generate_cross(prop)
-            elif prop.layout == 9:
+            elif prop.layout == 8:
                 generate_beetle(prop)
-            elif prop.layout == 10:
+            elif prop.layout == 9:
                 generate_outer_room_floor(max_nb_room_x, max_nb_room_y, prop)
                 secondary_gen = 1
             elif prop.layout == 11:

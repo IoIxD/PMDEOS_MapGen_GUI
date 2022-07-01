@@ -220,7 +220,8 @@ class MainWindow(Gtk.Window):
             layout = entry.get_text()
         
         if layout != None:
-            Properties.layout = self.layout_options.index(layout)
+            print(self.layout_options.index(layout)+1)
+            Properties.layout = self.layout_options.index(layout)+1
 
 
         if(self.randomize_seeds_checkbox.get_active() == True):
