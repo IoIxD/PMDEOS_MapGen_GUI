@@ -6,8 +6,8 @@ This is a GUI for a [Python library based on ](https://github.com/SkyTemple/dung
 
 - [Download Python 3 for your operating system](https://www.python.org/downloads/)
     - If you are on Linux you should use your distro's package manager instead, [the command you need to enter into the terminal is probably listed here](https://command-not-found.com/python)
-- On Windows, make sure "add Python to my PATH" is selected.
-- Download GTK. This is bundled with most Linux distros (thought PyGTK might not be), on Windows you should grab the [PyGTK installer](https://download.gnome.org/binaries/win32/pygtk/2.22/) to get it.
-- Open `cmd.exe` on Windows or the Terminal on MacOS/Linux, and type `cd <whatever folder you extract these files to>`
+- On Windows, make sure "add Python to my PATH" is selected at the end of installer.
+- Download GTK and/or PyGTK. GTK is bundled with most Linux distros (thought PyGTK might not be), on Windows you should grab the [PyGTK installer](https://download.gnome.org/binaries/win32/pygtk/2.22/) to get it. MacOS is not a supported platform because this is a commission for somebody who will either be using Windows or Linux.
+- Open `cmd.exe` on Windows or the Terminal on Linux, and type `cd <whatever folder you extract these files to>`
 - Do `python main.py`
 - You should see a GUI for generating your dungeon, but if you don't you can feel free to DM me on Discord or open an issue on the issues page.
