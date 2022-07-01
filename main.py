@@ -7,6 +7,7 @@ from PIL import Image
 
 import tempfile
 from pathlib import Path
+import random
 
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GdkPixbuf
@@ -14,12 +15,7 @@ from gi.repository import Gtk, GdkPixbuf
 #  DEFAULT PARAMETERS
 
 RandomGenerator.gen_type = 0
-RandomGenerator.count = 1
-RandomGenerator.seed_old_t0 = 0x8AF812DD
-RandomGenerator.seed_t0 = 0x50DA5D9E
-RandomGenerator.use_seed_t1 = 4
-RandomGenerator.seeds_t1 = [0x74AD7AAA, 0x00F891D9, 0x00F891D9, 0x00F891D9, 0x5100FC60]
-Properties.layout = 10
+Properties.layout = 1
 Properties.mh_chance = 0
 Properties.kecleon_chance = 0
 Properties.middle_room_secondary = 0
@@ -34,10 +30,6 @@ Properties.enemy_density = 2
 Properties.item_density = 2
 Properties.buried_item_density = 2
 Properties.trap_density = 3
-StaticParam.PATCH_APPLIED = 0
-StaticParam.FIX_DEAD_END_ERROR = 0
-StaticParam.FIX_OUTER_ROOM_ERROR = 0
-StaticParam.SHOW_ERROR = 0
 
 NB_TRIES = 1
 
@@ -69,8 +61,12 @@ class MainWindow(Gtk.Window):
         
         # Seed Type
         self.gen_type_dropdown = Gtk.ComboBoxText()
+        self.gen_type_dropdown.set_entry_text_column(0)
         self.gen_type_dropdown.append_text("Seed Type 0")
         self.gen_type_dropdown.append_text("Seed Type 1")
+        self.gen_type_dropdown.set_active(0)
+        self.gen_type_dropdown.connect("changed",self.change_seed_type)
+
         self.gen_type = self.new_option("Seed Type",self.gen_type_dropdown)
 
         self.seeds_vbox.pack_start(self.gen_type,False,False,0)
@@ -79,7 +75,7 @@ class MainWindow(Gtk.Window):
         self.type0_seed_entry = Gtk.Entry()
         self.type0_seed = self.new_option("Seed",self.type0_seed_entry)   
 
-        self.seeds_vbox.pack_start(self.type0_seed_entry,False,False,0)
+        self.seeds_vbox.pack_end(self.type0_seed,False,False,0)
 
         # Seed for type 1
         self.type1_seeds = []
@@ -102,51 +98,47 @@ class MainWindow(Gtk.Window):
 
         # dropdown for map type
         self.layout_dropdown = Gtk.ComboBoxText()
-        self.layout_dropdown.append_text("Normal Floor")
-        self.layout_dropdown.append_text("One Monster House")
-        self.layout_dropdown.append_text("Ring")
-        self.layout_dropdown.append_text("Crossroads")
-        self.layout_dropdown.append_text("Two Monster Houses")
-        self.layout_dropdown.append_text("Line")
-        self.layout_dropdown.append_text("Cross")
-        self.layout_dropdown.append_text("Beetle")
-        self.layout_dropdown.append_text("Outer Room Floor")
+        self.layout_dropdown.set_entry_text_column(0)
+        self.layout_options = ["Normal Floor","One Monster House","Ring","Crossroads","Two Monster Houses","Line","Cross","Beetle","Outer Room Floor"]
+        for line in self.layout_options:
+            self.layout_dropdown.append_text(line)
+        self.layout_dropdown.set_active(0)
         layout = self.new_option("Layout Type",self.layout_dropdown)
         self.vbox_pack_default(layout)
 
         # the rest are self explanatory
-        self.monsterhouse_entry = Gtk.Entry()
+        self.monsterhouse_entry = Gtk.Entry(text=Properties.mh_chance)
         monsterhouse = self.new_option("Monster House Chance",self.monsterhouse_entry)
         self.vbox_pack_default(monsterhouse)
 
-        self.kecleonchance_entry = Gtk.Entry()
-        kecleonchance = self.new_option("Keckleon House",self.kecleonchance_entry)
-        self.vbox_pack_default(monsterhouse)
+        self.kecleonchance_entry = Gtk.Entry(text=Properties.kecleon_chance)
+        kecleonchance = self.new_option("Keckleon Chance",self.kecleonchance_entry)
+        self.vbox_pack_default(kecleonchance)
 
-        self.mazechance_entry = Gtk.Entry()
-        mazechance = self.new_option("Maze House",self.mazechance_entry)
+        self.mazechance_entry = Gtk.Entry(text=Properties.maze_chance)
+        mazechance = self.new_option("Maze Chance",self.mazechance_entry)
         self.vbox_pack_default(mazechance)
 
-        self.room_num_entry = Gtk.Entry()
+        self.room_num_entry = Gtk.Entry(text=Properties.nb_rooms)
         room_num = self.new_option("Number of Rooms",self.room_num_entry)
         self.vbox_pack_default(room_num)
 
         self.extra_hallways_checkbox = Gtk.CheckButton(label="Extra Hallways?")
         self.vbox_pack_default(self.extra_hallways_checkbox)
 
-        self.trap_density_entry = Gtk.Entry()
+        self.trap_density_entry = Gtk.Entry(text=Properties.trap_density)
         trap_density = self.new_option("Trap Density",self.trap_density_entry)
         self.vbox_pack_default(trap_density)
 
-        self.enemy_density_entry = Gtk.Entry()
+        self.enemy_density_entry = Gtk.Entry(text=Properties.enemy_density)
         enemy_density = self.new_option("Enemy Density",self.enemy_density_entry)
         self.vbox_pack_default(enemy_density)
 
-        self.item_density_entry = Gtk.Entry()
+        self.item_density_entry = Gtk.Entry(text=Properties.item_density)
         item_density = self.new_option("Item Density",self.item_density_entry)
         self.vbox_pack_default(item_density)
 
-        self.buried_item_density_entry = Gtk.Entry()
+        self.buried_item_density_entry = Gtk.Entry(text=Properties.buried_item_density)
         buried_item_density = self.new_option("Buried Item Density",self.buried_item_density_entry)
         self.vbox_pack_default(buried_item_density)
 
@@ -158,21 +150,17 @@ class MainWindow(Gtk.Window):
 
         self.advanced_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         
-        self.floor_connectivity_entry = Gtk.Entry()
+        self.floor_connectivity_entry = Gtk.Entry(text=Properties.floor_connectivity)
         floor_connectivity = self.new_option("Floor Connectivity",self.floor_connectivity_entry)
         self.advanced_vbox.pack_start(floor_connectivity,False,False,2)
+
+        self.secondary_density_entry = Gtk.Entry(text=Properties.secondary_density)
+        secondary_density = self.new_option("Secondary Density",self.secondary_density_entry)
+        self.advanced_vbox.add(secondary_density)
 
         self.dead_end_checkbox = Gtk.CheckButton(label="Dead End")
         self.advanced_vbox.add(self.dead_end_checkbox)
  
-        self.secondary_density_entry = Gtk.Entry()
-        secondary_density = self.new_option("Secondary Density",self.secondary_density_entry)
-        self.advanced_vbox.add(secondary_density)
-
-        self.count_entry = Gtk.Entry()
-        count = self.new_option("'Count'",self.count_entry)
-        self.advanced_vbox.pack_end(count,False,False,2)
-
         # we have to add it and remove it later, presumably so gtk can make room for it in the window
         self.vbox_pack_default(self.advanced_vbox)
 
@@ -181,6 +169,7 @@ class MainWindow(Gtk.Window):
         self.vbox_pack_default(self.submit_button)
 
         self.add(self.hbox)
+        self.set_default_size(800,600)
 
     # Pack an object with the default options
     def vbox_pack_default(self, gobject):
@@ -190,64 +179,191 @@ class MainWindow(Gtk.Window):
     def new_option(self, text, gobject):
         new_option_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         new_option_text = Gtk.Label(label=text)
-        new_option_hbox.pack_start(new_option_text,False,False,2)
-        new_option_hbox.pack_end(gobject,True,True,2)
+        new_option_hbox.pack_start(new_option_text,False,True,2)
+        new_option_hbox.pack_end(gobject,False,False,2)
         return new_option_hbox
 
-    # Toggle the visibility of the seed options
-    def toggle_seed_vbox(self, checkbox):
-        objects = []
-        objects.append(self.gen_type)
-        if(RandomGenerator.gen_type == 1):
-            # the check is actually in reverse! because um because um u h uhh uhh uhm uhhh 
-            objects.append(self.type0_seed)
-        else:
-            objects.append(self.type1_seeds_vbox)
-            objects.append(self.type1_seeds_vbox_hbox)
+    # Update the options based on what we currently have.
+    def update_options(self, what=None):
+        # values that are basically ints
+        Properties.mh_chance = int(self.monsterhouse_entry.get_text())
+        Properties.kecleon_chance = int(self.kecleonchance_entry.get_text())
+        Properties.maze_chance = int(self.mazechance_entry.get_text())
+        Properties.nb_rooms = int(self.room_num_entry.get_text())
+        Properties.trap_density = int(self.trap_density_entry.get_text())
+        Properties.enemy_density = int(self.enemy_density_entry.get_text())
+        Properties.item_density = int(self.item_density_entry.get_text())
+        Properties.buried_item_density = int(self.buried_item_density_entry.get_text())
+        Properties.floor_connectivity = int(self.floor_connectivity_entry.get_text())
+        Properties.secondary_density = int(self.secondary_density_entry.get_text())
 
-        if checkbox.get_active():
-            for obj in objects:
-                self.seeds_vbox.remove(obj)
+        # checkboxes
+        if(self.extra_hallways_checkbox.get_active() == True):
+            Properties.extra_hallways = 1
         else:
-            for obj in objects:
-                self.seeds_vbox.pack_start(obj,False,False,0)
+            Properties.extra_hallways = 0
 
+        if(self.dead_end_checkbox.get_active() == True):
+            Properties.dead_end = 1
+        else:
+            Properties.dead_end = 0
+
+        # dropdown
+        layout = None
+        tree_iter = self.layout_dropdown.get_active_iter()
+        if tree_iter is not None:
+            model = self.layout_dropdown.get_model()
+            row_id, name = model[tree_iter][:2]
+            layout = row_id
+        else:
+            entry = self.layout_dropdown.get_child()
+            layout = entry.get_text()
+        
+        if layout != None:
+            Properties.layout = self.layout_options.index(layout)
+
+
+        if(self.randomize_seeds_checkbox.get_active() == True):
+            # Randomized seeds
+            if(RandomGenerator.gen_type == 0):
+                RandomGenerator.seed_t0 = random.randrange(2147483647)
+            else:
+                RandomGenerator.seeds_t1 = [random.randrange(1 << 32) for i in range(5)] 
+        else:
+            # Set seeds
+            if(RandomGenerator.gen_type == 0):
+                inputString = self.type0_seed_entry.get_text()
+                try:
+                    RandomGenerator.seed_t0 = int(inputString)
+                except ValueError: # the user probably put in a string
+                    # let them do that, though! just convert the string to integers
+                    seed = 0
+                    for char in inputString:
+                        seed += ord(char)
+                    RandomGenerator.seed_t0 = seed
+            else:
+                RandomGenerator.seeds_t1 = []
+                seeds_vbox_children = self.type1_seeds_vbox.get_children()
+                count = 0
+                for obj in seeds_vbox_children:
+                    if(type(obj) == Gtk.Entry):
+                        inputString = obj.get_text()
+                        try:
+                            RandomGenerator.seeds_t1.append(int(obj.get_text()))
+                        except ValueError:
+                            seed = 0
+                            for char in inputString:
+                                seed += ord(char)
+                            RandomGenerator.seeds_t1.append(seed)
+                        count += 1
+                RandomGenerator.use_seed_t1 = random.randrange(count)
+                if(count <= 3):
+                    self.dialog("Must have at least four seeds for type 1 mode")
+                    return 1
+
+    # Generate the image and add it to the side.
+    def populate_image(self, button=None, filename="pmdeos_mapgen_image.png"):
+        try:
+            self.update_options()
+        except AttributeError as ex:
+            if(ex == "'MainWindow' object has no attribute 'monsterhouse_entry'"):
+                pass # very weird error where the monster house input isn't seen when the program starts up? doesn't matter though just ignore it
+        except ValueError as ex:
+            self.dialog(ex)
+
+        try:
+            rooms = generate_maze()
+            self.last_image = Image.frombytes(data=bytes(rooms), size=(56, 32), mode="P")
+            self.last_image.putpalette(
+                [
+                    255, 0, 0,      # red
+                    0, 192, 0,      # dark green
+                    0, 0, 255,      # blue
+                    0, 0, 0,        # black
+                    192, 0, 0,      # dark red
+                    192, 0, 192,    # magenta
+                    0, 128, 128,    # dark cyan
+                    0, 255, 255,    # cyan
+                    255, 255, 0,    # orange
+                    255, 255, 255,  # white
+                    255, 128, 0,    # dark orange 
+                    0, 96, 0,       # very dark green
+                ]
+                + [0, 0, 0] * 244   # pad the rest out with whatever we didn't specify
+            )
+            resultpath = tempfile.gettempdir()+"/"+filename
+            Path(resultpath).touch()
+            self.last_image.save(resultpath)
+            self.generated_image.set_from_file(resultpath)
+        except Exception as ex:
+            self.dialog(ex)
+
+    # Toggle the visibility of the advanced options.
     def toggle_advanced_vbox(self, checkbox):
         if self.advanced_or_unknown_options.get_active() is True:
             self.vbox.pack_end(self.advanced_vbox,False,False,0)
         else:
             self.vbox.remove(self.advanced_vbox)
+        self.show_all()
 
-    # Add or remove labels to the seed box
-    def modify_seed_box():
-        print("")
+    # SEED SHIT
+
+    def change_seed_type(self, dropdown):
+        tree_iter = dropdown.get_active_iter()
+        if tree_iter is not None:
+            model = dropdown.get_model()
+            seed_type = model[tree_iter][0]
+            if(seed_type == "Seed Type 0"):
+                RandomGenerator.gen_type = 0
+            else:
+                RandomGenerator.gen_type = 1
+            # turn the seed vbox on and off to refresh it; a weird but fast/effective way of changing it's look.
+            self.toggle_seed_vbox(self.randomize_seeds_checkbox,True)
+            self.toggle_seed_vbox(self.randomize_seeds_checkbox,False)
+
+    # Toggle the visibility of the seed options
+    def toggle_seed_vbox(self, checkbox, hide=None):
+        if(hide == None):
+            hide = checkbox.get_active()
+
+        if hide:
+            for obj in self.seeds_vbox.get_children():
+                self.seeds_vbox.remove(obj)
+        else:
+            objects = []
+            objects.append(self.gen_type)
+
+            if(RandomGenerator.gen_type == 0):
+                objects.append(self.type0_seed)
+            else:
+                objects.append(self.type1_seeds_vbox)
+                objects.append(self.type1_seeds_vbox_hbox)
+
+            for obj in objects:
+                self.seeds_vbox.pack_start(obj,False,False,0)
+        self.show_all()
+
+    def dialog(self, message):
+        win = Gtk.Window(title="Error")
+        box = Gtk.Box()
+        box.pack_start(Gtk.Label(label=message),True,True,5)
+        win.add(box)
+        win.connect("destroy", Gtk.main_quit)
+        win.show_all()
+        Gtk.main()
+
+
+    # Add or remove labels to the seed box (for type 1)
+    def modify_seed_box(self, button, type):
+        if(type == "add"):
+            self.type1_seeds_vbox.pack_start(Gtk.Entry(),False,False,0)
+        else:
+            seeds_vbox_children = self.type1_seeds_vbox.get_children()
+            self.type1_seeds_vbox.remove(seeds_vbox_children[len(seeds_vbox_children)-2])
+        self.show_all()
         #todo
 
-    # Generate the image and add it to the side.
-    def populate_image(self, button=None, filename="pmdeos_mapgen_image.png"):
-        rooms = generate_maze()
-        self.last_image = Image.frombytes(data=bytes(rooms), size=(56, 32), mode="P")
-        self.last_image.putpalette(
-            [
-                255, 0, 0,      # red
-                0, 192, 0,      # dark green
-                0, 0, 255,      # blue
-                0, 0, 0,        # black
-                192, 0, 0,      # dark red
-                192, 0, 192,    # magenta
-                0, 128, 128,    # dark cyan
-                0, 255, 255,    # cyan
-                255, 255, 0,    # orange
-                255, 255, 255,  # white
-                255, 128, 0,    # dark orange 
-                0, 96, 0,       # very dark green
-            ]
-            + [0, 0, 0] * 244   # pad the rest out with whatever we didn't specify
-        )
-        resultpath = tempfile.gettempdir()+"/"+filename
-        Path(resultpath).touch()
-        self.last_image.save(resultpath)
-        self.generated_image.set_from_file(resultpath)
+
 
 
 def main():
