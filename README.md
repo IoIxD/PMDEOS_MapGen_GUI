@@ -4,7 +4,7 @@ This is a GUI for a [Python library based on ](https://github.com/SkyTemple/dung
 
 ## Running
 
-- [Download Python for your operating system](https://www.python.org/downloads/)
+- [Download Python 3 for your operating system](https://www.python.org/downloads/)
     - If you are on Linux you should use your distro's package manager instead, [the command you need to enter into the terminal is probably listed here](https://command-not-found.com/python)
 - On Windows, make sure "add Python to my PATH" is selected.
 - Download GTK. This is bundled with most Linux distros (thought PyGTK might not be), on Windows you should grab the [PyGTK installer](https://download.gnome.org/binaries/win32/pygtk/2.22/) to get it.
