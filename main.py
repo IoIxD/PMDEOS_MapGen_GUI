@@ -12,13 +12,17 @@ import random
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GdkPixbuf
 
+# import tkinter simply for getting the dpi
+import tkinter
+root = tkinter.Tk()
+scale = int(root.winfo_fpixels('1i') / 96.0)
+
 #  DEFAULT PARAMETERS
 
 RandomGenerator.gen_type = 0
 Properties.layout = 1
 Properties.mh_chance = 0
 Properties.kecleon_chance = 0
-Properties.middle_room_secondary = 0
 Properties.nb_rooms = 5
 Properties.bit_flags = 0x1
 Properties.floor_connectivity = 14
@@ -30,6 +34,7 @@ Properties.enemy_density = 2
 Properties.item_density = 2
 Properties.buried_item_density = 2
 Properties.trap_density = 3
+StatusData.middle_room_secondary = 0
 
 NB_TRIES = 1
 
@@ -145,6 +150,9 @@ class MainWindow(Gtk.Window):
         self.extra_hallways_checkbox = Gtk.CheckButton(label="Extra Hallways?")
         self.vbox_pack_default(self.extra_hallways_checkbox)
 
+        self.secondary_terrain_checkbox = Gtk.CheckButton(label="Secondary Terrain")
+        self.vbox_pack_default(self.secondary_terrain_checkbox)
+
         self.trap_density_entry = Gtk.Entry(text=Properties.trap_density)
         trap_density = self.new_option("Trap Density",self.trap_density_entry)
         self.vbox_pack_default(trap_density)
@@ -226,6 +234,11 @@ class MainWindow(Gtk.Window):
             Properties.dead_end = 1
         else:
             Properties.dead_end = 0
+
+        if(self.secondary_terrain_checkbox.get_active() == True):
+            StatusData.middle_room_secondary = 1
+        else:
+            StatusData.middle_room_secondary = 0
 
         # dropdown
         layout = None
@@ -315,6 +328,7 @@ class MainWindow(Gtk.Window):
             )
             resultpath = tempfile.gettempdir()+"/"+filename
             Path(resultpath).touch()
+            self.last_image = self.last_image.resize((56*4*scale, 32*4*scale), Image.Resampling.NEAREST)
             self.last_image.save(resultpath)
             self.generated_image.set_from_file(resultpath)
         except Exception as ex:
@@ -383,10 +397,6 @@ class MainWindow(Gtk.Window):
             seeds_vbox_children = self.type1_seeds_vbox.get_children()
             self.type1_seeds_vbox.remove(seeds_vbox_children[len(seeds_vbox_children)-2])
         self.show_all()
-        #todo
-
-
-
 
 def main():
     win = MainWindow()
