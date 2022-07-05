@@ -3583,10 +3583,10 @@ def generate_floor():
                 fixed_room = 0
             DungeonData.attempts = gen_attempts
 
-            if gen_attempts >= 1:
+            #if gen_attempts >= 1:
                 # If layout generation has failed once, turn off secondary
                 # structure generation on subsequent attempts
-                StatusData.middle_room_secondary = 0
+                #StatusData.middle_room_secondary = 0
 
             StatusData.is_not_valid = 0
             StatusData.kecleon_shop_middle_x = -1
@@ -3658,9 +3658,9 @@ def generate_floor():
                 secondary_gen = 1
             elif prop.layout == 7:
                 generate_cross(prop)
-            elif prop.layout == 8:
-                generate_beetle(prop)
             elif prop.layout == 9:
+                generate_beetle(prop)
+            elif prop.layout == 10:
                 generate_outer_room_floor(max_nb_room_x, max_nb_room_y, prop)
                 secondary_gen = 1
             elif prop.layout == 11:

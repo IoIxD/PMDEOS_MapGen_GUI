@@ -34,7 +34,7 @@ Properties.enemy_density = 2
 Properties.item_density = 2
 Properties.buried_item_density = 2
 Properties.trap_density = 3
-StatusData.middle_room_secondary = 0
+Properties.middle_room_secondary = 0
 
 NB_TRIES = 1
 
@@ -56,7 +56,7 @@ class MainWindow(Gtk.Window):
         self.imagebox.pack_end(Gtk.Label(label="Key: \n"+
             "Red: Strictly out of bounds\n"+
             "Green: Regular Floor\n"+
-            "Blue: Out of bounds but can be destroyed (I think?)\n"+
+            "Blue: Water\n"+
             "Dark Red: Enemy\n"+
             "Magenta: Trap\n"+
             "Dark Cyan: Item\n"+
@@ -225,20 +225,20 @@ class MainWindow(Gtk.Window):
         Properties.secondary_density = int(self.secondary_density_entry.get_text())
 
         # checkboxes
-        if(self.extra_hallways_checkbox.get_active() == True):
+        if(self.extra_hallways_checkbox.get_active() is True):
             Properties.extra_hallways = 1
         else:
             Properties.extra_hallways = 0
 
-        if(self.dead_end_checkbox.get_active() == True):
+        if(self.dead_end_checkbox.get_active() is True):
             Properties.dead_end = 1
         else:
             Properties.dead_end = 0
 
-        if(self.secondary_terrain_checkbox.get_active() == True):
-            StatusData.middle_room_secondary = 1
+        if(self.secondary_terrain_checkbox.get_active() is True):
+            Properties.middle_room_secondary = 100
         else:
-            StatusData.middle_room_secondary = 0
+            Properties.middle_room_secondary = 0
 
         # dropdown
         layout = None
@@ -300,6 +300,8 @@ class MainWindow(Gtk.Window):
         except AttributeError as ex:
             if(ex == "'MainWindow' object has no attribute 'monsterhouse_entry'"):
                 pass # very weird error where the monster house input isn't seen when the program starts up? doesn't matter though just ignore it
+            else:
+                print(ex)
         except ValueError as ex:
             self.dialog(ex)
 
@@ -313,7 +315,7 @@ class MainWindow(Gtk.Window):
                     255, 0, 0,      # red
                     0, 192, 0,      # dark green
                     0, 0, 255,      # blue
-                    0, 0, 0,        # black
+                    0, 0, 0,        # nope
 
                     192, 0, 0,      # dark red, enemy
                     192, 0, 192,    # magenta, trap
@@ -414,31 +416,35 @@ def generate_maze():
     rooms = []
     for y in range(32):
         for x in range(56):
+            toappend = 0
             if DungeonData.list_tiles[x][y].spawn_flags & 0x8:
-                rooms.append(4)  # Enemy
+                toappend = 4  # Enemy
             elif DungeonData.list_tiles[x][y].spawn_flags & 0x4:
-                rooms.append(5)  # Trap
+                toappend = 5 # Trap
             elif DungeonData.list_tiles[x][y].spawn_flags & 0x2:
                 if DungeonData.list_tiles[x][y].terrain_flags & 0x3 == 0:
-                    rooms.append(6)  # Buried Item
+                    toappend = 6  # Buried Item
                 else:
-                    rooms.append(7)  # Item
+                    toappend = 7  # Item
             elif DungeonData.player_spawn_x == x and DungeonData.player_spawn_y == y:
-                rooms.append(8)  # Player Spawn
+                toappend = 8 # Player Spawn
             elif DungeonData.stairs_spawn_x == x and DungeonData.stairs_spawn_y == y:
-                rooms.append(9)  # Stairs Spawn
+                toappend = 9  # Stairs Spawn
             elif (
                 DungeonData.list_tiles[x][y].terrain_flags & 0x40
                 and DungeonData.list_tiles[x][y].terrain_flags & 0x3 == 1
             ):
-                rooms.append(10)  # Monster House
+                toappend = 10  # Monster House
             elif (
                 DungeonData.list_tiles[x][y].terrain_flags & 0x20
                 and DungeonData.list_tiles[x][y].terrain_flags & 0x3 == 1
             ):
-                rooms.append(11)  # Kecleon Shop
+                toappend = 11  # Kecleon Shop
             else:
-                rooms.append(DungeonData.list_tiles[x][y].terrain_flags & 0x3)  # Terrain
+                toappend = DungeonData.list_tiles[x][y].terrain_flags & 0x3  # Terrain
+            print(toappend,end='')
+            rooms.append(toappend)
+        print('',end='\n')
     return rooms
 
 main()
