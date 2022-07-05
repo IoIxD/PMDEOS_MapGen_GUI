@@ -41,10 +41,29 @@ class MainWindow(Gtk.Window):
 
         # The maze image on the left
         self.hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        self.imagebox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         self.generated_image = Gtk.Image()
-        self.hbox.pack_start(self.generated_image,True,True,0)
+        self.imagebox.pack_start(self.generated_image,True,True,0)
 
         self.populate_image("pmdeos_mapgen_og_image.png")
+
+        # The key under it
+        self.imagebox.pack_end(Gtk.Label(label="Key: \n"+
+            "Red: Strictly out of bounds\n"+
+            "Green: Regular Floor\n"+
+            "Blue: Out of bounds but can be destroyed (I think?)\n"+
+            "Dark Red: Enemy\n"+
+            "Magenta: Trap\n"+
+            "Dark Cyan: Item\n"+
+            "Cyan: Buried Item\n"+
+            "Orange: Player Spawn\n"+
+            "White: Stairs Spawn\n"+
+            "Dark Orange: Monster House\n"+
+            "Very Dark Green: Keckleon Shop\n" 
+            ),
+        True,False,4)
+
+        self.hbox.pack_start(self.imagebox,True,True,0)
 
         # The options on the right
         self.vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
@@ -220,7 +239,6 @@ class MainWindow(Gtk.Window):
             layout = entry.get_text()
         
         if layout != None:
-            print(self.layout_options.index(layout)+1)
             Properties.layout = self.layout_options.index(layout)+1
 
 
@@ -275,20 +293,23 @@ class MainWindow(Gtk.Window):
         try:
             rooms = generate_maze()
             self.last_image = Image.frombytes(data=bytes(rooms), size=(56, 32), mode="P")
+            newsize = (56*6, 32*6)
+            self.last_image = self.last_image.resize(newsize)
             self.last_image.putpalette(
                 [
                     255, 0, 0,      # red
                     0, 192, 0,      # dark green
                     0, 0, 255,      # blue
                     0, 0, 0,        # black
-                    192, 0, 0,      # dark red
-                    192, 0, 192,    # magenta
-                    0, 128, 128,    # dark cyan
-                    0, 255, 255,    # cyan
-                    255, 255, 0,    # orange
-                    255, 255, 255,  # white
-                    255, 128, 0,    # dark orange 
-                    0, 96, 0,       # very dark green
+
+                    192, 0, 0,      # dark red, enemy
+                    192, 0, 192,    # magenta, trap
+                    0, 128, 128,    # dark cyan, item
+                    0, 255, 255,    # cyan, buried item
+                    255, 255, 0,    # orange, player spawn
+                    255, 255, 255,  # white, stairs spawn
+                    255, 128, 0,    # dark orange , monster house
+                    0, 96, 0,       # very dark green , keckleon  shop
                 ]
                 + [0, 0, 0] * 244   # pad the rest out with whatever we didn't specify
             )
